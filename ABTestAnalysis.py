@@ -38,6 +38,24 @@ html_footer = """
 a_csvData = pd.read_csv("./A.csv",encoding="utf_8")
 b_csvData = pd.read_csv("./B.csv",encoding="utf_8")
 
+abDf = pd.DataFrame({
+  "A test":a_csvData.A_data,
+  "B test":b_csvData.B_data,
+})
+anlyDf=pd.DataFrame({
+  "User":np.concatenate([a_csvData.A_user,b_csvData.B_user]),
+  "Group":np.concatenate([np.tile("A",len(a_csvData.A_data)),(np.tile("B",len(b_csvData.B_data)))]),
+  "Data":np.concatenate([a_csvData.A_data,b_csvData.B_data]),
+  })  
+
+cross_data = pd.pivot_table(
+    data = anlyDf,
+    values ="User",
+    aggfunc = "sum",
+    index = "Group",
+    columns = "Data"
+)
+
 tTestResult = stats.ttest_ind(a_csvData.A_data, b_csvData.B_data, equal_var = False)
 resultStrPVal = "P value : "+str(tTestResult.pvalue)
 
@@ -46,10 +64,7 @@ if tTestResult.pvalue<0.05:
 else:
   resultStrTTest = "有意差なし"
 
-anlyDf=pd.DataFrame({
-  "Group":np.concatenate([np.tile("A",len(a_csvData.A_data)),(np.tile("B",len(b_csvData.B_data)))]),
-  "Data":np.concatenate([a_csvData.A_data,b_csvData.B_data]),
-  })  
+
 sns.swarmplot(x="Group",y="Data",data=anlyDf)
 plt.title("Swarm plot")  
 plt.savefig("swarm.png")
