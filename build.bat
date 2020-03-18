@@ -1,0 +1,1 @@
+pyinstaller.exe tTest.py --onefile --windowed --icon=icon.ico
