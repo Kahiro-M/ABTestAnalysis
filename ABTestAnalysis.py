@@ -38,32 +38,30 @@ html_footer = """
 a_csvData = pd.read_csv("./A.csv",encoding="utf_8")
 b_csvData = pd.read_csv("./B.csv",encoding="utf_8")
 
-abDf = pd.DataFrame({
-  "A test":a_csvData.A_data,
-  "B test":b_csvData.B_data,
-})
-anlyDf=pd.DataFrame({
-  "User":np.concatenate([a_csvData.A_user,b_csvData.B_user]),
+anlyDf = pd.DataFrame({
   "Group":np.concatenate([np.tile("A",len(a_csvData.A_data)),(np.tile("B",len(b_csvData.B_data)))]),
   "Data":np.concatenate([a_csvData.A_data,b_csvData.B_data]),
-  })  
-
-cross_data = pd.pivot_table(
-    data = anlyDf,
-    values ="User",
-    aggfunc = "sum",
-    index = "Group",
-    columns = "Data"
+})
+abDf=pd.crosstab(
+  index=anlyDf["Group"],
+  columns=anlyDf["Data"]
 )
 
-tTestResult = stats.ttest_ind(a_csvData.A_data, b_csvData.B_data, equal_var = False)
-resultStrPVal = "P value : "+str(tTestResult.pvalue)
-
-if tTestResult.pvalue<0.05:
-  resultStrTTest = "有意差あり"
+chi2Value, chi2PValue, chi2DoF, chi2EF = stats.chi2_contingency(abDf, correction=False)
+chi2ResultStrPVal = "p値 : "+str(chi2PValue)
+chi2ResultStrVal = "カイ二乗値 : "+str(chi2Value)
+chi2ResultStrDoF = "自由度 : "+str(chi2DoF)
+if chi2PValue<0.05:
+  resultStrChi2Test = "<b>カイ二乗検定　有意差あり</b>"
 else:
-  resultStrTTest = "有意差なし"
+  resultStrChi2Test = "<b>カイ二乗検定　有意差なし</b>"
 
+fisherOddsRatio, fisherPValue = stats.fisher_exact(abDf)
+fisherResultStrPVal = "p値 : "+str(fisherPValue)
+if fisherPValue<0.05:
+  resultStrFisherTest = "<b>フィッシャーの正確検定　有意差あり</b>"
+else:
+  resultStrFisherTest = "<b>フィッシャーの正確検定　有意差なし</b>"
 
 sns.swarmplot(x="Group",y="Data",data=anlyDf)
 plt.title("Swarm plot")  
@@ -100,15 +98,25 @@ plt.clf()
 # html output
 with open("result.html", mode="w", encoding="utf_8") as fileObj:
   fileObj.write(html_header)
-  fileObj.write("対応がないt検定")
+  fileObj.write(resultStrChi2Test)
   fileObj.write("<br>")
-  fileObj.write(resultStrPVal)
+  fileObj.write(chi2ResultStrPVal)
+  fileObj.write("　　")
+  fileObj.write(chi2ResultStrVal)
+  fileObj.write("　　")
+  fileObj.write(chi2ResultStrDoF)
   fileObj.write("<br>")
-  fileObj.write(resultStrTTest)
+  fileObj.write("<br>")
+  fileObj.write(resultStrFisherTest)
+  fileObj.write("<br>")
+  fileObj.write(fisherResultStrPVal)
   fileObj.write("<br>")
   fileObj.write("<br>")
-  fileObj.write(a_csvData.to_html())
-  fileObj.write(b_csvData.to_html())
+  fileObj.write("<br>")
+  fileObj.write("実験結果")
+  fileObj.write(anlyDf.to_html())
+  fileObj.write("　　　クロス集計表")
+  fileObj.write(abDf.to_html())
   fileObj.write("<br>")
 
   fileObj.write("<img src='swarm.png'>")
