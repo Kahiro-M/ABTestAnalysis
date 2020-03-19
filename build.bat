@@ -1,1 +1,1 @@
-pyinstaller.exe tTest.py --onefile --windowed --icon=icon.ico
+pyinstaller.exe ABTestAnalysis.py --onefile --windowed --icon=icon.ico
