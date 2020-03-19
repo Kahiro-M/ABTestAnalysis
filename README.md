@@ -22,7 +22,7 @@ pip install seaborn
 
 ## 実行方法
 1. csvデータを用意
-2. `py ABTestAnalysis.py`　もしくは　[ここ](からダウンロードしたexeを実行
+2. `py ABTestAnalysis.py`　もしくは　[ここ](https://github.com/Kahiro-M/ABTestAnalysis/releases/tag/Ver.1.0.0)からダウンロードしたexeを実行
 3. 生成されたresult.htmlを開く
 
 ## 入力データの形式
