@@ -4,11 +4,7 @@
 
 import numpy as np
 import pandas as pd
-import csv
 from scipy import stats
-from matplotlib import pyplot as plt
-import seaborn as sns
-sns.set()
 
 html_header = """
 <!doctype html>
@@ -39,6 +35,7 @@ a_csvData = pd.read_csv("./A.csv",encoding="utf_8")
 b_csvData = pd.read_csv("./B.csv",encoding="utf_8")
 
 anlyDf = pd.DataFrame({
+  "User":np.concatenate([a_csvData.A_user,b_csvData.B_user]),
   "Group":np.concatenate([np.tile("A",len(a_csvData.A_data)),(np.tile("B",len(b_csvData.B_data)))]),
   "Data":np.concatenate([a_csvData.A_data,b_csvData.B_data]),
 })
@@ -48,52 +45,33 @@ abDf=pd.crosstab(
 )
 
 chi2Value, chi2PValue, chi2DoF, chi2EF = stats.chi2_contingency(abDf, correction=False)
-chi2ResultStrPVal = "p値 : "+str(chi2PValue)
+chi2ResultStrPVal = "p値 : "+str('{:.10f}'.format(chi2PValue))
 chi2ResultStrVal = "カイ二乗値 : "+str(chi2Value)
 chi2ResultStrDoF = "自由度 : "+str(chi2DoF)
 if chi2PValue<0.05:
-  resultStrChi2Test = "<b>カイ二乗検定　有意差あり</b>"
+  resultStrChi2Test = "<b>カイ二乗検定　<font color=red>有意差あり(GroupとDataには関連がある)</font></b>"
 else:
-  resultStrChi2Test = "<b>カイ二乗検定　有意差なし</b>"
+  resultStrChi2Test = "<b>カイ二乗検定　有意差なし(GroupとDataには関連がない)</b>"
 
-fisherOddsRatio, fisherPValue = stats.fisher_exact(abDf)
-fisherResultStrPVal = "p値 : "+str(fisherPValue)
-if fisherPValue<0.05:
-  resultStrFisherTest = "<b>フィッシャーの正確検定　有意差あり</b>"
+np.array([[2,2],[2,2]]).shape
+if np.array([[2,2],[2,2]]).shape != abDf.shape:
+  fisherResultStrPVal = "２要素 x ２群の計４パターンで表現できる入力データで実行してください。"
+  resultStrFisherTest = "<b>要素が多すぎるため、フィッシャーの正確検定を実行できませんでした。</b>"
 else:
-  resultStrFisherTest = "<b>フィッシャーの正確検定　有意差なし</b>"
+  fisherOddsRatio, fisherPValue = stats.fisher_exact(abDf)
+  fisherResultStrPVal = "p値 : "+str('{:.10f}'.format(fisherPValue))
+  if fisherPValue<0.05:
+    resultStrFisherTest = "<b>フィッシャーの正確検定　<font color=red>有意差あり(GroupとDataには関連がある)</font></b>"
+  else:
+    resultStrFisherTest = "<b>フィッシャーの正確検定　有意差なし(GroupとDataには関連がない)</b>"
 
-sns.swarmplot(x="Group",y="Data",data=anlyDf)
-plt.title("Swarm plot")  
-plt.savefig("swarm.png")
-plt.clf()
 
-sns.boxenplot(x="Group",y="Data",data=anlyDf,)
-plt.title("Letter value plot")  
-plt.savefig("lv.png")
-plt.clf()
-
-sns.boxplot(x="Group",y="Data",data=anlyDf)
-plt.title("Box plot")  
-plt.savefig("box.png")
-plt.clf()
-
-sns.violinplot(x="Group",y="Data",data=anlyDf)
-plt.title("violin plot")  
-plt.savefig("violin.png")
-plt.clf()
-
-sns.distplot(a_csvData.A_data,label="Group A")
-sns.distplot(b_csvData.B_data,label="Group B")
-plt.legend()
-plt.title("Histgram")  
-plt.savefig("hist.png")
-plt.clf()
-
-sns.barplot(x="Group",y="Data",data=anlyDf,capsize=0.1)
-plt.title("Bar plot(avg.)")  
-plt.savefig("bar.png")
-plt.clf()
+abDf4display=pd.crosstab(
+  index=anlyDf["Group"],
+  columns=anlyDf["Data"],
+  margins=True, 
+  normalize=False
+)
 
 # html output
 with open("result.html", mode="w", encoding="utf_8") as fileObj:
@@ -113,17 +91,9 @@ with open("result.html", mode="w", encoding="utf_8") as fileObj:
   fileObj.write("<br>")
   fileObj.write("<br>")
   fileObj.write("<br>")
-  fileObj.write("実験結果")
+  fileObj.write("入力データ")
   fileObj.write(anlyDf.to_html())
   fileObj.write("　　　クロス集計表")
-  fileObj.write(abDf.to_html())
+  fileObj.write(abDf4display.to_html())
   fileObj.write("<br>")
-
-  fileObj.write("<img src='swarm.png'>")
-  fileObj.write("<img src='violin.png'>")
-  fileObj.write("<img src='hist.png'>")
-  fileObj.write("<img src='lv.png'>")
-  fileObj.write("<img src='box.png'>")
-  fileObj.write("<img src='bar.png'>")
-
   fileObj.write(html_footer)
